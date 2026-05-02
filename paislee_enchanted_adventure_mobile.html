@@ -1,0 +1,982 @@
+<div id="game-root" style="font-family: var(--font-sans); padding: 0.5rem 0; max-width: 100%;">
+  <div id="screen-container"></div>
+</div>
+
+<style>
+  #game-root * { box-sizing: border-box; }
+  .game-card {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    padding: 10px;
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .stat-pill {
+    padding: 6px 8px;
+    background: var(--color-background-primary);
+    border-radius: var(--border-radius-md);
+    border: 0.5px solid var(--color-border-tertiary);
+    font-weight: 500;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .stat-pill-wide { grid-column: span 2; }
+  .choice-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 14px 12px;
+    margin-bottom: 8px;
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: 14px;
+    font-family: var(--font-sans);
+    color: var(--color-text-primary);
+    line-height: 1.4;
+    min-height: 48px;
+  }
+  .choice-btn:active { background: var(--color-background-secondary); }
+  .difficulty-btn {
+    padding: 14px;
+    border-radius: var(--border-radius-lg);
+    border: 0.5px solid var(--color-border-tertiary);
+    cursor: pointer;
+    font-family: var(--font-sans);
+    background: var(--color-background-primary);
+    text-align: left;
+    width: 100%;
+    margin-bottom: 8px;
+    min-height: 60px;
+  }
+  .difficulty-btn:active { background: var(--color-background-secondary); }
+  .mochi-box {
+    background: var(--color-background-info);
+    border-radius: var(--border-radius-md);
+    padding: 10px 12px;
+    margin: 10px 0;
+    font-size: 13px;
+    color: var(--color-text-info);
+    border-left: 3px solid var(--color-text-info);
+    line-height: 1.5;
+  }
+  .level-banner {
+    background: var(--color-background-secondary);
+    padding: 8px 10px;
+    border-radius: var(--border-radius-md);
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  .place-tag {
+    display: inline-block;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    padding: 4px 8px;
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    margin-bottom: 10px;
+  }
+  .narrative {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    color: var(--color-text-primary);
+  }
+  .save-code {
+    font-family: var(--font-mono);
+    background: var(--color-background-secondary);
+    padding: 12px 8px;
+    border-radius: var(--border-radius-md);
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    word-break: break-all;
+    margin: 10px 0;
+    border: 0.5px dashed var(--color-border-secondary);
+    line-height: 1.5;
+  }
+  h1 { font-size: 20px; font-weight: 500; margin: 0 0 8px; line-height: 1.3; }
+  h2 { font-size: 17px; font-weight: 500; margin: 0 0 8px; line-height: 1.3; }
+  h3 { font-size: 15px; font-weight: 500; margin: 0 0 6px; line-height: 1.3; }
+  .top-controls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  .small-btn {
+    font-size: 11px;
+    padding: 8px 4px;
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-family: var(--font-sans);
+    color: var(--color-text-secondary);
+    min-height: 36px;
+    text-align: center;
+  }
+  .small-btn:active { background: var(--color-background-secondary); }
+  .victory { text-align: center; }
+  .song-verse {
+    font-style: italic;
+    margin: 10px 0;
+    font-size: 13px;
+    line-height: 1.7;
+    text-align: left;
+  }
+  .certificate {
+    border: 2px solid var(--color-text-info);
+    border-radius: var(--border-radius-lg);
+    padding: 14px;
+    text-align: center;
+    margin: 12px 0;
+    background: var(--color-background-info);
+    color: var(--color-text-info);
+  }
+  textarea {
+    width: 100%;
+    min-height: 70px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 8px;
+    border-radius: var(--border-radius-md);
+    border: 0.5px solid var(--color-border-tertiary);
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    resize: vertical;
+  }
+  .character-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    background: var(--color-background-secondary);
+    padding: 10px;
+    border-radius: var(--border-radius-md);
+    margin-bottom: 12px;
+  }
+  .char-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--color-background-primary);
+    padding: 6px;
+    border-radius: var(--border-radius-md);
+  }
+  .char-info {
+    min-width: 0;
+    flex: 1;
+  }
+  .char-name {
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1.2;
+  }
+  .char-role {
+    font-size: 10px;
+    color: var(--color-text-secondary);
+    line-height: 1.2;
+  }
+  .map-svg-wrap {
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 6px;
+    margin-bottom: 12px;
+  }
+  .legend {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    background: var(--color-background-secondary);
+    padding: 8px 10px;
+    border-radius: var(--border-radius-md);
+    margin: 10px 0;
+  }
+</style>
+
+<script>
+(function() {
+  const STATE = {
+    screen: 'start',
+    difficulty: null,
+    hearts: 5,
+    maxHearts: 5,
+    sparkles: 10,
+    inventory: [],
+    spells: [],
+    level: 1,
+    sceneIndex: 0,
+    mochiReviveUsed: false,
+    saveCode: null
+  };
+
+  const DIFFICULTIES = {
+    sprinkle: { name: '🌸 Sprinkle', hearts: 7, sparkles: 15, label: 'Easy' },
+    cupcake: { name: '⭐ Cupcake', hearts: 5, sparkles: 10, label: 'Medium' },
+    dragonfire: { name: '🔥 Dragonfire', hearts: 3, sparkles: 8, label: 'Hard' }
+  };
+  
+  function paisleePortrait(size) {
+    return `
+      <svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+        <path d="M 22 48 Q 18 75 25 92 L 75 92 Q 82 75 78 48 Z" fill="#5D3A1F"/>
+        <ellipse cx="50" cy="52" rx="20" ry="23" fill="#FBD7B5"/>
+        <path d="M 28 42 Q 30 28 50 25 Q 70 28 72 42 Q 65 35 50 36 Q 35 35 28 42 Z" fill="#5D3A1F"/>
+        <path d="M 28 42 Q 22 60 26 80 L 32 80 Q 30 60 34 45 Z" fill="#6B4423"/>
+        <path d="M 72 42 Q 78 60 74 80 L 68 80 Q 70 60 66 45 Z" fill="#6B4423"/>
+        <ellipse cx="42" cy="52" rx="3" ry="3.5" fill="#FFFFFF"/>
+        <ellipse cx="58" cy="52" rx="3" ry="3.5" fill="#FFFFFF"/>
+        <circle cx="42" cy="53" r="2.2" fill="#5D3A1F"/>
+        <circle cx="58" cy="53" r="2.2" fill="#5D3A1F"/>
+        <circle cx="42.5" cy="52" r="0.7" fill="#FFFFFF"/>
+        <circle cx="58.5" cy="52" r="0.7" fill="#FFFFFF"/>
+        <path d="M 38 46 Q 42 44 46 46" stroke="#5D3A1F" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M 54 46 Q 58 44 62 46" stroke="#5D3A1F" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M 50 56 Q 49 60 51 62" stroke="#D4A582" stroke-width="1" fill="none"/>
+        <path d="M 44 66 Q 50 70 56 66" stroke="#C44569" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <circle cx="36" cy="60" r="2.5" fill="#F4A6B8" opacity="0.5"/>
+        <circle cx="64" cy="60" r="2.5" fill="#F4A6B8" opacity="0.5"/>
+      </svg>
+    `;
+  }
+  
+  function mochiPortrait(size) {
+    return `
+      <svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+        <ellipse cx="22" cy="45" rx="10" ry="14" fill="#F4C0D1" opacity="0.7" transform="rotate(-20 22 45)"/>
+        <ellipse cx="78" cy="45" rx="10" ry="14" fill="#F4C0D1" opacity="0.7" transform="rotate(20 78 45)"/>
+        <ellipse cx="50" cy="65" rx="22" ry="20" fill="#FFFFFF" stroke="#E8E8E8" stroke-width="1"/>
+        <circle cx="50" cy="45" r="22" fill="#FFFFFF" stroke="#E8E8E8" stroke-width="1"/>
+        <path d="M 33 30 L 30 18 L 42 26 Z" fill="#FFFFFF" stroke="#E8E8E8" stroke-width="1"/>
+        <path d="M 32 22 L 30 18 L 36 21 Z" fill="#F0997B"/>
+        <path d="M 67 30 L 70 18 L 58 26 Z" fill="#FFFFFF" stroke="#E8E8E8" stroke-width="1"/>
+        <path d="M 68 22 L 70 18 L 64 21 Z" fill="#7F77DD"/>
+        <circle cx="32" cy="20" r="1.5" fill="#EF9F27"/>
+        <circle cx="68" cy="20" r="1.5" fill="#5DCAA5"/>
+        <ellipse cx="42" cy="45" rx="3" ry="4" fill="#1D9E75"/>
+        <ellipse cx="58" cy="45" rx="3" ry="4" fill="#1D9E75"/>
+        <circle cx="42.5" cy="44" r="1" fill="#FFFFFF"/>
+        <circle cx="58.5" cy="44" r="1" fill="#FFFFFF"/>
+        <path d="M 48 52 L 52 52 L 50 55 Z" fill="#F4A6B8"/>
+        <path d="M 50 55 Q 47 58 44 56" stroke="#888" stroke-width="0.8" fill="none"/>
+        <path d="M 50 55 Q 53 58 56 56" stroke="#888" stroke-width="0.8" fill="none"/>
+        <line x1="32" y1="52" x2="22" y2="50" stroke="#888" stroke-width="0.6"/>
+        <line x1="32" y1="55" x2="22" y2="55" stroke="#888" stroke-width="0.6"/>
+        <line x1="68" y1="52" x2="78" y2="50" stroke="#888" stroke-width="0.6"/>
+        <line x1="68" y1="55" x2="78" y2="55" stroke="#888" stroke-width="0.6"/>
+        <circle cx="35" cy="52" r="2" fill="#F4A6B8" opacity="0.6"/>
+        <circle cx="65" cy="52" r="2" fill="#F4A6B8" opacity="0.6"/>
+      </svg>
+    `;
+  }
+
+  function renderMap() {
+    const places = [
+      { id: 'willowbrook', name: 'Willowbrook', x: 50, y: 350, level: 0, icon: '🏡' },
+      { id: 'forest', name: 'Forest', x: 130, y: 250, level: 1, icon: '🌳' },
+      { id: 'caves', name: 'Crystal Caves', x: 200, y: 360, level: 2, icon: '💎' },
+      { id: 'stadium', name: 'Sky Stadium', x: 290, y: 220, level: 3, icon: '☁️' },
+      { id: 'bakery', name: 'Mirror Bakery', x: 320, y: 360, level: 4, icon: '🍰' },
+      { id: 'mountain', name: 'Shadow Mtn.', x: 350, y: 100, level: 5, icon: '🏔️' }
+    ];
+    
+    const currentLevel = STATE.level;
+    const pathD = places.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+    
+    const placesHtml = places.map(p => {
+      const isVisited = p.level < currentLevel;
+      const isCurrent = p.level === currentLevel;
+      const isFuture = p.level > currentLevel;
+      
+      const fillColor = isCurrent ? '#FAC775' : isVisited ? '#9FE1CB' : '#D3D1C7';
+      const strokeColor = isCurrent ? '#854F0B' : isVisited ? '#0F6E56' : '#5F5E5A';
+      const labelOpacity = isFuture ? '0.5' : '1';
+      const labelY = p.y > 300 ? p.y - 22 : p.y + 28;
+      
+      return `
+        <g>
+          <circle cx="${p.x}" cy="${p.y}" r="${isCurrent ? 16 : 12}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="2"/>
+          <text x="${p.x}" y="${p.y + 5}" text-anchor="middle" font-size="13">${p.icon}</text>
+          <text x="${p.x}" y="${labelY}" text-anchor="middle" font-size="10" fill="var(--color-text-primary)" opacity="${labelOpacity}" font-weight="500">${p.name}</text>
+          ${isCurrent ? `
+            <circle cx="${p.x}" cy="${p.y}" r="20" fill="none" stroke="#EF9F27" stroke-width="2" opacity="0.6">
+              <animate attributeName="r" values="20;26;20" dur="1.5s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.6;0.2;0.6" dur="1.5s" repeatCount="indefinite"/>
+            </circle>
+          ` : ''}
+          ${isVisited ? `<text x="${p.x + 9}" y="${p.y - 8}" font-size="10">⭐</text>` : ''}
+        </g>
+      `;
+    }).join('');
+    
+    const currentPlace = places.find(p => p.level === currentLevel) || places[0];
+    
+    return `
+      <div class="map-svg-wrap">
+        <svg viewBox="0 0 380 440" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block;">
+          <rect x="0" y="0" width="380" height="440" fill="#EAF3DE" rx="8"/>
+          
+          <ellipse cx="130" cy="260" rx="55" ry="35" fill="#C0DD97" opacity="0.6"/>
+          <ellipse cx="200" cy="370" rx="45" ry="30" fill="#D3D1C7" opacity="0.6"/>
+          <ellipse cx="290" cy="225" rx="55" ry="40" fill="#B5D4F4" opacity="0.6"/>
+          <ellipse cx="320" cy="370" rx="45" ry="30" fill="#F5C4B3" opacity="0.6"/>
+          <ellipse cx="350" cy="110" rx="50" ry="50" fill="#B4B2A9" opacity="0.7"/>
+          
+          <path d="M 0 320 Q 100 310 180 305 Q 270 300 380 290" stroke="#85B7EB" stroke-width="5" fill="none" opacity="0.5"/>
+          
+          <text x="80" y="220" font-size="16">🌲</text>
+          <text x="170" y="240" font-size="12">🌿</text>
+          <text x="250" y="380" font-size="14">🪨</text>
+          <text x="240" y="200" font-size="14">☁️</text>
+          <text x="280" y="155" font-size="14">☁️</text>
+          <text x="60" y="380" font-size="14">🌸</text>
+          <text x="320" y="60" font-size="16">⛰️</text>
+          
+          <path d="${pathD}" stroke="#854F0B" stroke-width="3" stroke-dasharray="5,3" fill="none" opacity="0.7"/>
+          
+          ${placesHtml}
+          
+          <g transform="translate(345, 30)">
+            <circle r="18" fill="#FFFFFF" stroke="#5F5E5A" stroke-width="1.5"/>
+            <text y="-7" text-anchor="middle" font-size="8" font-weight="500" fill="#A32D2D">N</text>
+            <text y="12" text-anchor="middle" font-size="8" fill="#444">S</text>
+            <text x="-10" y="3" text-anchor="middle" font-size="8" fill="#444">W</text>
+            <text x="10" y="3" text-anchor="middle" font-size="8" fill="#444">E</text>
+            <path d="M 0 -12 L -2 0 L 0 -2 L 2 0 Z" fill="#A32D2D"/>
+          </g>
+          
+          <text x="150" y="30" text-anchor="middle" font-size="13" font-weight="500" fill="#444">🗺️ Willowbrook Map</text>
+          
+          <g transform="translate(${currentPlace.x - 11}, ${currentPlace.y - 44})">
+            <circle cx="11" cy="11" r="11" fill="#FFFFFF" stroke="#854F0B" stroke-width="1.5"/>
+            <ellipse cx="11" cy="8" rx="5" ry="2.5" fill="#5D3A1F"/>
+            <ellipse cx="11" cy="12" rx="4" ry="5" fill="#FBD7B5"/>
+            <circle cx="9" cy="12" r="0.7" fill="#5D3A1F"/>
+            <circle cx="13" cy="12" r="0.7" fill="#5D3A1F"/>
+            <path d="M 9 15 Q 11 16 13 15" stroke="#C44569" stroke-width="0.5" fill="none"/>
+            <path d="M 5 10 Q 3 17 6 22 L 16 22 Q 19 17 17 10 Z" fill="#5D3A1F"/>
+          </g>
+        </svg>
+      </div>
+    `;
+  }
+
+  const SCENES = {
+    1: [
+      {
+        title: '🌳 Level 1',
+        place: 'Whispering Tree Grove',
+        text: 'Paislee and Mochi step into the Enchanted Forest. Three ancient talking trees block the path. The middle tree booms: "I rise without seeds, fall without hands, and feed every flower in all the lands. What am I?"',
+        mochi: 'Psst! Look up at the sky... what falls down to help plants grow?',
+        choices: [
+          { text: '☀️ The Sun', correct: false, result: 'The trees rumble, "Close, but the sun does not FALL!" Lose 1 Heart.', effect: { hearts: -1 } },
+          { text: '🌧️ The Rain', correct: true, result: 'The trees cheer! "Correct, clever child!" They part to let you through. Gain 2 Sparkles!', effect: { sparkles: 2 } },
+          { text: '🍃 The Wind', correct: false, result: 'The trees shake. "Wind does not feed flowers!" Lose 1 Heart.', effect: { hearts: -1 } }
+        ]
+      },
+      {
+        title: '🌳 Level 1',
+        place: 'Forest Sprite\'s Glade',
+        text: 'You meet the Forest Sprite. Her magical pie recipe was ruined by rain. She begs Paislee to help bake a new one to cheer up the forest animals.',
+        mochi: 'I smell ripe berries nearby! And honey! Let\'s gather what we need!',
+        choices: [
+          { text: '🥧 Bake a Berry-Honey Sparkle Pie', correct: true, result: 'You whip up the most beautiful pie! The Sprite teaches you the SPARK SPELL! ✨', effect: { spells: 'Spark Spell', sparkles: 3 } },
+          { text: '🍪 Bake plain cookies', correct: false, result: 'The Sprite is polite but disappointed. Just 1 Sparkle.', effect: { sparkles: 1 } },
+          { text: '🏃 Skip and move on', correct: false, result: 'The Sprite frowns. The forest grows dim. Lose 1 Heart.', effect: { hearts: -1 } }
+        ]
+      },
+      {
+        title: '🌳 Level 1',
+        place: 'The Vine Gate',
+        text: 'A magical door of vines blocks the forest exit. The vines whisper: "Show us your power!"',
+        mochi: 'You just learned the Spark Spell! Try it!',
+        choices: [
+          { text: '✨ Cast Spark Spell', correct: true, result: 'The vines unwind in a shower of sparkles! Level 1 Complete! 🎉', effect: { sparkles: -2 }, levelEnd: true },
+          { text: '🥎 Throw a softball', correct: false, result: 'The ball bounces off. Lose 1 Heart trying again.', effect: { hearts: -1 } },
+          { text: '🌀 Use spinning top', correct: false, result: 'Time freezes briefly but vines remain. Lose 1 Sparkle.', effect: { sparkles: -1 } }
+        ]
+      }
+    ],
+    2: [
+      {
+        title: '💎 Level 2',
+        place: 'Glittering Entrance',
+        text: 'You enter glittering caves where crystals hum with magic. Suddenly, a swarm of Crystal Bats swoops down!',
+        mochi: 'Use a fidget to confuse them!',
+        choices: [
+          { text: '🎇 Popper Fidget flash of light', correct: true, result: 'The bats are dazzled and fly away! You earn a Glow Crystal! 💎', effect: { inventory: 'Glow Crystal' } },
+          { text: '🥎 Pitch a softball', correct: false, result: 'You hit one but others scratch you. Lose 1 Heart.', effect: { hearts: -1 } },
+          { text: '✨ Cast Spark Spell', correct: false, result: 'The cave is too damp - your spell fizzles. Lose 2 Sparkles.', effect: { sparkles: -2 } }
+        ]
+      },
+      {
+        title: '💎 Level 2',
+        place: 'Cave Troll Arena',
+        text: 'Three grumpy Cave Trolls challenge you to a PITCHING SHOWDOWN! Out-pitch them to pass.',
+        mochi: 'Wind up that arm, Paislee! Aim for the bullseye!',
+        choices: [
+          { text: '🥎 Strongest fastball', correct: true, result: 'STRIKE! Bullseye! The trolls give you a Cave Map! 🗺️', effect: { inventory: 'Cave Map' } },
+          { text: '🌀 Spinning top to slow time', correct: true, result: 'Time slows. You aim PERFECTLY. Gain 3 Sparkles!', effect: { sparkles: 3 } },
+          { text: '🎯 Throw a curveball', correct: false, result: 'It curves wide. The trolls pelt you with pebbles. Lose 1 Heart.', effect: { hearts: -1 } }
+        ]
+      },
+      {
+        title: '💎 Level 2',
+        place: 'Floating Crystal Bridge',
+        text: 'A bridge of floating crystals stretches over a deep canyon. The crystals are slippery!',
+        mochi: 'I can fly, but you need a way across!',
+        choices: [
+          { text: '🪀 Stretchy band as a rope', correct: true, result: 'You swing across like a hero! Level 2 Complete! 🎉', levelEnd: true },
+          { text: '🏃 Run across quickly', correct: false, result: 'You slip! Mochi catches you but you lose 1 Heart.', effect: { hearts: -1 } },
+          { text: '🧊 Cube to make a portal', correct: true, result: 'A portal opens to the other side! Level 2 Complete! 🎉', effect: { sparkles: -3 }, levelEnd: true }
+        ]
+      }
+    ],
+    3: [
+      {
+        title: '☁️ Level 3',
+        place: 'Cloud Dugout',
+        text: 'You arrive at the Floating Softball Stadium! The Cloud Cubs await. Winner gets the SKY KEY. Mochi cheers from the dugout!',
+        mochi: 'GO PAISLEE! YOU GOT THIS!',
+        choices: [
+          { text: '🥎 Bat for a home run', correct: true, result: 'CRACK! The ball flies into the clouds! HOME RUN! 3 runs!', effect: { sparkles: 2 } },
+          { text: '🥎 Bunt safely', correct: false, result: 'You make first base, but only 1 run. Slow start.', effect: {} },
+          { text: '✨ Spark Spell on the bat', correct: true, result: 'Your bat glows! GRAND SLAM! 4 runs!', effect: { sparkles: -3 } }
+        ]
+      },
+      {
+        title: '☁️ Level 3',
+        place: 'Pitcher\'s Mound',
+        text: 'Now you must PITCH against the Cloud Cubs. Their best batter, Cumulus the Slugger, steps up.',
+        mochi: 'Mix up your pitches! Don\'t let him guess!',
+        choices: [
+          { text: '🌀 Freeze time mid-pitch', correct: true, result: 'STRIKEOUT! Cumulus never sees it! Crowd goes wild!', effect: { sparkles: 2 } },
+          { text: '🥎 Knuckleball', correct: true, result: 'It dances! STRIKE THREE! You earn the SKY KEY! 🗝️', effect: { inventory: 'Sky Key' } },
+          { text: '🥎 Straight down the middle', correct: false, result: 'CRACK! Home run for the Cubs. Lose 1 Heart.', effect: { hearts: -1 } }
+        ]
+      },
+      {
+        title: '☁️ Level 3',
+        place: 'Home Plate',
+        text: 'Tied 5-5 at the bottom of the 9th. One more hit wins it!',
+        mochi: 'WIN IT, PAISLEE!',
+        choices: [
+          { text: '🥎 Swing for the fences', correct: true, result: 'WALK-OFF HOME RUN! Sky Key is yours! Level 3 Complete! 🎉', effect: { inventory: 'Sky Key' }, levelEnd: true },
+          { text: '🥎 Sneaky bunt', correct: false, result: 'They tag you out! Lose 1 Heart.', effect: { hearts: -1 } },
+          { text: '✨ Spark Spell on the ball', correct: true, result: 'The ball rockets like a comet! HOME RUN! Level 3 Complete!', effect: { sparkles: -3 }, levelEnd: true }
+        ]
+      }
+    ],
+    4: [
+      {
+        title: '🍰 Level 4',
+        place: 'Bakery Counter',
+        text: 'You enter a magical bakery where ingredients change when you blink! The Mirror Chef challenges you to a BAKE-OFF.',
+        mochi: 'That\'s flour... no wait, sugar! Trust your nose!',
+        choices: [
+          { text: '👀 Don\'t blink, watch carefully', correct: true, result: 'You catch every change! You earn the Trickster Whisk! 🥄', effect: { inventory: 'Trickster Whisk' } },
+          { text: '🌀 Spinning top to freeze time', correct: true, result: 'Brilliant! Perfect cake while ingredients can\'t change!', effect: { sparkles: -2 } },
+          { text: '😴 Close your eyes and guess', correct: false, result: 'Cake explodes into glitter! Lose 1 Heart.', effect: { hearts: -1 } }
+        ]
+      },
+      {
+        title: '🍰 Level 4',
+        place: 'Magical Oven Room',
+        text: 'Round 2: Make a pie that tastes like RAINBOWS. Mirror Chef smirks: "Impossible!"',
+        mochi: 'Use the Glow Crystal from the caves! Tastes magical!',
+        choices: [
+          { text: '💎 Glow Crystal as ingredient', correct: true, result: 'Your pie glows in 7 colors! Mirror Chef gasps! You win!', effect: { sparkles: 3 } },
+          { text: '🍓 Only red berries', correct: false, result: 'Pretty, but not rainbow. Lose 1 Heart.', effect: { hearts: -1 } },
+          { text: '✨ Spark Spell on top', correct: true, result: 'Sparkles dance across the pie! Mirror Chef is impressed!', effect: { sparkles: -2 } }
+        ]
+      },
+      {
+        title: '🍰 Level 4',
+        place: 'Champion\'s Oven',
+        text: 'Final round: bake something MAGICAL. Mirror Chef hisses: "Whoever I taste as best wins!"',
+        mochi: 'Bake with love, Paislee. That\'s real magic.',
+        choices: [
+          { text: '🍪 Sparkle cookies with love', correct: true, result: 'Mirror Chef CRIES happy tears! "I haven\'t felt love in 100 years!" Level 4 Complete!', levelEnd: true },
+          { text: '🎂 Fancy 5-tier cake', correct: false, result: 'It topples over! Lose 1 Heart.', effect: { hearts: -1 } },
+          { text: '🥧 Forest pie like before', correct: true, result: 'Familiar magic, but powerful! You win! Level 4 Complete!', levelEnd: true }
+        ]
+      }
+    ],
+    5: [
+      {
+        title: '🏔️ Level 5',
+        place: 'Mountain Trailhead',
+        text: 'You climb Shadow Mountain. The GLOOM GOBLIN cackles, holding the Golden Whisk! He summons shadow minions.',
+        mochi: 'We face him TOGETHER, Paislee!',
+        choices: [
+          { text: '🎇 Popper to blind minions', correct: true, result: 'FLASH! The shadows shriek and scatter!', effect: {} },
+          { text: '✨ Spark Spell at the Goblin', correct: true, result: 'The spell strikes! The Goblin staggers!', effect: { sparkles: -3 } },
+          { text: '🥎 Fastball at his face', correct: true, result: 'BONK! Right on the nose! He drops his staff!', effect: {} }
+        ]
+      },
+      {
+        title: '🏔️ Level 5',
+        place: 'Mountain Peak',
+        text: 'The Goblin growls: "Solve this or perish! What has a whisk but cannot bake, holds the magic that none can take?"',
+        mochi: 'Easy! It\'s the thing he\'s holding!',
+        choices: [
+          { text: '🥄 The Golden Whisk!', correct: true, result: 'CORRECT! The Goblin shrieks! His grip weakens!', effect: { sparkles: 3 } },
+          { text: '🍳 A frying pan', correct: false, result: 'WRONG! Goblin fires shadow magic. Lose 1 Heart.', effect: { hearts: -1 } },
+          { text: '🌟 A magic wand', correct: false, result: 'WRONG! Shadows wrap around you. Lose 1 Heart.', effect: { hearts: -1 } }
+        ]
+      },
+      {
+        title: '🏔️ Level 5',
+        place: 'Shadow Throne',
+        text: 'The Gloom Goblin is weakened but dangerous. To grab the Whisk, use ALL your skills!',
+        mochi: 'EVERYTHING AT ONCE, PAISLEE!',
+        choices: [
+          { text: '🌟 ALL skills together!', correct: true, result: 'Glowing pie + softball bat + Spark Spell + cube portal! He POOFS into smoke! THE GOLDEN WHISK IS YOURS! 🥄✨', levelEnd: true },
+          { text: '🥎 Just softballs', correct: false, result: 'He blocks them! Lose 1 Heart.', effect: { hearts: -1 } },
+          { text: '✨ Just magic', correct: false, result: 'He absorbs the magic! Lose 2 Sparkles.', effect: { sparkles: -2 } }
+        ]
+      }
+    ]
+  };
+
+  const root = document.getElementById('screen-container');
+
+  function generateSaveCode() {
+    const words = ['MOONBERRY', 'WHISK', 'SPARKLE', 'KITTEN', 'MAGIC', 'COOKIE', 'STAR', 'MOCHI', 'PAISLEE'];
+    const w1 = words[Math.floor(Math.random() * words.length)];
+    const w2 = words[Math.floor(Math.random() * words.length)];
+    const num = Math.floor(Math.random() * 99) + 1;
+    return `🌟 ${w1}-${w2}-${num}-${STATE.difficulty?.toUpperCase() || 'NEW'}-L${STATE.level} 🌟`;
+  }
+
+  function applyEffect(effect) {
+    if (!effect) return;
+    if (effect.hearts) STATE.hearts = Math.max(0, Math.min(STATE.maxHearts, STATE.hearts + effect.hearts));
+    if (effect.sparkles) STATE.sparkles = Math.max(0, STATE.sparkles + effect.sparkles);
+    if (effect.inventory) STATE.inventory.push(effect.inventory);
+    if (effect.spells) STATE.spells.push(effect.spells);
+  }
+
+  function checkRevive() {
+    if (STATE.hearts <= 0) {
+      if (!STATE.mochiReviveUsed) {
+        STATE.mochiReviveUsed = true;
+        STATE.hearts = 2;
+        return 'mochi-revive';
+      } else {
+        return 'game-over';
+      }
+    }
+    return 'ok';
+  }
+
+  function renderCharacterRow() {
+    return `
+      <div class="character-row">
+        <div class="char-card">
+          ${paisleePortrait(48)}
+          <div class="char-info">
+            <div class="char-name">Paislee 🌟</div>
+            <div class="char-role">The Hero</div>
+          </div>
+        </div>
+        <div class="char-card">
+          ${mochiPortrait(44)}
+          <div class="char-info">
+            <div class="char-name">Mochi 🐱</div>
+            <div class="char-role">Sidekick</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderStatBar() {
+    const hearts = '❤️'.repeat(Math.max(0, STATE.hearts));
+    const inv = STATE.inventory.length ? `🎒 ${STATE.inventory.length}` : '🎒 0';
+    const spellCount = STATE.spells.length;
+    return `
+      <div class="stat-grid">
+        <div class="stat-pill">📍 Lvl ${STATE.level}/5</div>
+        <div class="stat-pill">${hearts || '💔'} ${STATE.hearts}/${STATE.maxHearts}</div>
+        <div class="stat-pill">✨ ${STATE.sparkles}</div>
+        <div class="stat-pill">📜 ${spellCount} · ${inv}</div>
+      </div>
+    `;
+  }
+
+  function renderTopControls() {
+    return `
+      <div class="top-controls">
+        <button class="small-btn" onclick="window._game.showMap()">🗺️ Map</button>
+        <button class="small-btn" onclick="window._game.save()">💾 Save</button>
+        <button class="small-btn" onclick="window._game.restart()">🔄 Restart</button>
+      </div>
+    `;
+  }
+
+  function renderStart() {
+    root.innerHTML = `
+      <div class="game-card">
+        <h1 style="text-align: center;">✨ Paislee's<br>Enchanted Adventure ✨</h1>
+        <p style="color: var(--color-text-secondary); text-align: center; font-size: 13px; margin-bottom: 14px;">A magical RPG quest with Mochi!</p>
+        ${renderCharacterRow()}
+        ${renderMap()}
+        <h3 style="text-align: center; margin-top: 12px;">Welcome, hero!</h3>
+        <button class="choice-btn" onclick="window._game.newGame()">🌟 Start NEW Adventure</button>
+        <button class="choice-btn" onclick="window._game.showLoad()">💾 Load Saved Game</button>
+      </div>
+    `;
+  }
+
+  function renderLoad() {
+    root.innerHTML = `
+      <div class="game-card">
+        <h2>💾 Load Saved Game</h2>
+        <p style="margin-bottom: 10px; font-size: 13px;">Paste your Magic Save Code:</p>
+        <textarea id="loadCode" placeholder="🌟 MOONBERRY-WHISK-42-CUPCAKE-L2 🌟"></textarea>
+        <button class="choice-btn" style="margin-top: 10px;" onclick="window._game.loadGame()">Load!</button>
+        <button class="choice-btn" onclick="window._game.start()">Back</button>
+      </div>
+    `;
+  }
+
+  function renderDifficulty() {
+    root.innerHTML = `
+      <div class="game-card">
+        <h2 style="text-align:center;">Choose Difficulty</h2>
+        <p style="color: var(--color-text-secondary); font-size: 13px; margin-bottom: 12px; text-align:center;">How tricky should it be?</p>
+        <button class="difficulty-btn" onclick="window._game.setDifficulty('sprinkle')">
+          <div style="font-weight: 500; font-size: 14px;">🌸 Sprinkle (Easy)</div>
+          <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 2px;">7 Hearts · 15 Sparkles</div>
+        </button>
+        <button class="difficulty-btn" onclick="window._game.setDifficulty('cupcake')">
+          <div style="font-weight: 500; font-size: 14px;">⭐ Cupcake (Medium)</div>
+          <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 2px;">5 Hearts · 10 Sparkles</div>
+        </button>
+        <button class="difficulty-btn" onclick="window._game.setDifficulty('dragonfire')">
+          <div style="font-weight: 500; font-size: 14px;">🔥 Dragonfire (Hard)</div>
+          <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 2px;">3 Hearts · 8 Sparkles</div>
+        </button>
+      </div>
+    `;
+  }
+
+  function renderMapView() {
+    root.innerHTML = `
+      <div class="game-card">
+        <h2 style="text-align:center;">🗺️ Willowbrook Map</h2>
+        ${renderMap()}
+        <div class="legend">
+          🟡 You are here (pulsing)<br>
+          🟢 Visited places (with ⭐)<br>
+          ⚪ Places yet to come
+        </div>
+        <button class="choice-btn" onclick="window._game.continueGame()">▶️ Back to Adventure</button>
+      </div>
+    `;
+  }
+
+  function renderIntro() {
+    root.innerHTML = `
+      <div class="game-card">
+        ${renderTopControls()}
+        ${renderCharacterRow()}
+        ${renderStatBar()}
+        ${renderMap()}
+        <div class="level-banner">🏡 Welcome to Willowbrook</div>
+        <div class="narrative">
+          The morning sun shines through your window. You yawn, stretch, and look down at <strong>Mochi</strong>, your fluffy white kitten with rainbow ears and sparkly wings.
+          <br><br>
+          You run down to the family bakery — but something is WRONG. The shelves are empty of magic. The cookies have no sparkle!
+          <br><br>
+          A note in shadow ink reads: <em>"I have stolen the Golden Whisk of Wonder! - The Gloom Goblin"</em>
+        </div>
+        <div class="mochi-box">
+          <strong>🐱 Mochi:</strong> "We have to get it back! I'll come with you — adventure buddies forever!"
+        </div>
+        <button class="choice-btn" onclick="window._game.startLevel(1)">⚔️ Begin the Quest!</button>
+      </div>
+    `;
+  }
+
+  function renderScene() {
+    const scene = SCENES[STATE.level][STATE.sceneIndex];
+    if (!scene) return;
+    
+    const choicesHtml = scene.choices.map((choice, i) => 
+      `<button class="choice-btn" onclick="window._game.choose(${i})">${choice.text}</button>`
+    ).join('');
+    
+    root.innerHTML = `
+      <div class="game-card">
+        ${renderTopControls()}
+        ${renderCharacterRow()}
+        ${renderStatBar()}
+        <div class="level-banner">${scene.title}</div>
+        <span class="place-tag">📍 ${scene.place}</span>
+        <div class="narrative">${scene.text}</div>
+        <div class="mochi-box"><strong>🐱 Mochi:</strong> ${scene.mochi}</div>
+        <h3>What do you do?</h3>
+        ${choicesHtml}
+      </div>
+    `;
+  }
+
+  function renderResult(choice) {
+    applyEffect(choice.effect);
+    const reviveStatus = checkRevive();
+    
+    let extraMsg = '';
+    if (reviveStatus === 'mochi-revive') {
+      extraMsg = `<div class="mochi-box"><strong>🐱 Mochi:</strong> *PURR OF PROTECTION* ✨ Hearts restored to 2!</div>`;
+    } else if (reviveStatus === 'game-over') {
+      renderGameOver();
+      return;
+    }
+    
+    const isLastLevel = STATE.level >= 5;
+    
+    let nextBtn = '';
+    if (choice.levelEnd) {
+      if (isLastLevel) {
+        nextBtn = `<button class="choice-btn" onclick="window._game.victory()">🏆 See Your Victory!</button>`;
+      } else {
+        nextBtn = `<button class="choice-btn" onclick="window._game.nextLevel()">⭐ Continue!</button>`;
+      }
+    } else {
+      nextBtn = `<button class="choice-btn" onclick="window._game.nextScene()">➡️ Continue</button>`;
+    }
+    
+    root.innerHTML = `
+      <div class="game-card">
+        ${renderTopControls()}
+        ${renderStatBar()}
+        <h3>${choice.correct ? '✨ Great choice!' : '⚠️ Hmm...'}</h3>
+        <div class="narrative">${choice.result}</div>
+        ${extraMsg}
+        ${nextBtn}
+      </div>
+    `;
+  }
+
+  function renderLevelComplete() {
+    const rewards = {
+      1: 'Spark Spell ✨ + Sprite\'s Blessing 🌸',
+      2: 'Crystal Compass 🧭',
+      3: 'Sky Key 🗝️ + Friendship Bracelet 💙',
+      4: 'Trickster Whisk 🥄 + Recipe Book 📖'
+    };
+    
+    root.innerHTML = `
+      <div class="game-card victory">
+        ${renderTopControls()}
+        <h2>🎉 Level ${STATE.level} Complete! 🎉</h2>
+        ${renderMap()}
+        <div class="narrative">Amazing work! Mochi does happy zoomies around your feet!</div>
+        <div class="mochi-box"><strong>🐱 Mochi:</strong> "I knew you could do it!"</div>
+        <p style="font-size: 13px;"><strong>🎁 Reward:</strong> ${rewards[STATE.level]}</p>
+        <button class="choice-btn" style="margin-top: 12px;" onclick="window._game.advanceLevel()">⭐ Begin Level ${STATE.level + 1}</button>
+      </div>
+    `;
+  }
+
+  function renderVictory() {
+    root.innerHTML = `
+      <div class="game-card victory">
+        <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 12px;">
+          ${paisleePortrait(72)}
+          ${mochiPortrait(60)}
+        </div>
+        <h1>🏆✨ YOU SAVED<br>WILLOWBROOK! ✨🏆</h1>
+        <div class="narrative" style="text-align: left;">
+          The Gloom Goblin is gone! The Golden Whisk glows in your hands. You return to Willowbrook a HERO! The whole village throws a magical feast!
+        </div>
+        
+        <div class="certificate">
+          <h2>🏅 Hero's Certificate 🏅</h2>
+          <p style="font-size: 16px; font-weight: 500; margin: 8px 0;">Paislee the Brave</p>
+          <p style="font-size: 12px; line-height: 1.5;">Champion of Willowbrook<br>Defeater of the Gloom Goblin<br>Master of Cooking, Softball,<br>Magic & Fidgets</p>
+          <p style="margin-top: 8px; font-size: 12px;">🌟 ${DIFFICULTIES[STATE.difficulty]?.name} Conquered 🌟</p>
+        </div>
+
+        <h2 style="margin-top: 14px;">🎵 Victory Song 🎵</h2>
+        <p style="color: var(--color-text-secondary); font-size: 12px;">Sing it to a fun, bouncy tune!</p>
+        
+        <div class="song-verse">
+          <strong>✨ Verse 1 ✨</strong><br>
+          Brown hair flying, brown eyes bright,<br>
+          Paislee battled through the night!<br>
+          With a bat, a whisk, a magic spell,<br>
+          She saved the village we all love well! 🎶
+        </div>
+        
+        <div class="song-verse">
+          <strong>🎶 Chorus 🎶</strong><br>
+          Paislee, Paislee, brave and true!<br>
+          Mochi's purring right with you!<br>
+          Cooking, softball, magic, fun —<br>
+          The Gloom Goblin is DONE-DONE-DONE! ⭐✨
+        </div>
+        
+        <div class="song-verse">
+          <strong>✨ Verse 2 ✨</strong><br>
+          Through the forest, through the cave,<br>
+          Paislee fought, oh so brave!<br>
+          Crystal bats and shadow trolls,<br>
+          Couldn't stop our hero's goals! 🎵
+        </div>
+        
+        <div class="song-verse">
+          <strong>✨ Verse 3 ✨</strong><br>
+          Fidgets spinning, softballs flying,<br>
+          Pies are baking, no one's crying!<br>
+          Mochi's wings go flap-flap-flap,<br>
+          On Paislee's shoulder, what a snap! 🐱✨
+        </div>
+        
+        <div class="song-verse">
+          <strong>🎶 Final Chorus 🎶</strong><br>
+          Paislee, Paislee, hero bold!<br>
+          Brighter than the Whisk of Gold!<br>
+          Willowbrook is safe tonight —<br>
+          Because of YOU, our shining light! 🌟✨🎵
+        </div>
+        
+        <div class="mochi-box"><strong>🐱 Mochi:</strong> "I'm so proud of you! Want to do it all again?"</div>
+        
+        <button class="choice-btn" style="margin-top: 12px;" onclick="window._game.restart()">🔄 Play Again!</button>
+      </div>
+    `;
+  }
+
+  function renderGameOver() {
+    root.innerHTML = `
+      <div class="game-card">
+        <h2>💔 Oh no!</h2>
+        <div class="narrative">Paislee got too tired. But heroes never give up! Mochi gives you a big purr and you're ready to try again.</div>
+        <button class="choice-btn" onclick="window._game.restart()">🔄 Try Again</button>
+      </div>
+    `;
+  }
+
+  function renderSave() {
+    STATE.saveCode = generateSaveCode();
+    
+    root.innerHTML = `
+      <div class="game-card">
+        <h2>💾 Game Saved!</h2>
+        <p style="font-size: 13px;">Copy this Magic Save Code!</p>
+        <div class="save-code">${STATE.saveCode}</div>
+        <h3 style="margin-top: 10px;">📊 Your Stats:</h3>
+        <div style="font-size: 12px; color: var(--color-text-secondary); line-height: 1.7;">
+          ${DIFFICULTIES[STATE.difficulty]?.name || 'Unknown'} Mode<br>
+          Level: ${STATE.level} of 5<br>
+          Hearts: ${STATE.hearts}/${STATE.maxHearts}<br>
+          Sparkles: ${STATE.sparkles}<br>
+          Spells: ${STATE.spells.join(', ') || 'None'}<br>
+          Items: ${STATE.inventory.join(', ') || 'Empty'}
+        </div>
+        <p style="font-size: 11px; color: var(--color-text-secondary); margin-top: 10px;">⚠️ Screenshot or write down your code!</p>
+        <button class="choice-btn" style="margin-top: 12px;" onclick="window._game.continueGame()">▶️ Continue Playing</button>
+      </div>
+    `;
+  }
+
+  window._game = {
+    start: function() { STATE.screen = 'start'; renderStart(); },
+    showLoad: function() { renderLoad(); },
+    showMap: function() { renderMapView(); },
+    loadGame: function() {
+      const code = document.getElementById('loadCode').value.trim();
+      const match = code.match(/-([A-Z]+)-L(\d+)/);
+      if (match) {
+        const diff = match[1].toLowerCase();
+        const lvl = parseInt(match[2]);
+        if (DIFFICULTIES[diff] && lvl >= 1 && lvl <= 5) {
+          STATE.difficulty = diff;
+          STATE.hearts = DIFFICULTIES[diff].hearts;
+          STATE.maxHearts = DIFFICULTIES[diff].hearts;
+          STATE.sparkles = DIFFICULTIES[diff].sparkles;
+          STATE.level = lvl;
+          STATE.sceneIndex = 0;
+          STATE.inventory = [];
+          STATE.spells = [];
+          STATE.mochiReviveUsed = false;
+          renderScene();
+          return;
+        }
+      }
+      alert('Invalid save code! Starting new game.');
+      this.newGame();
+    },
+    newGame: function() { renderDifficulty(); },
+    setDifficulty: function(diff) {
+      STATE.difficulty = diff;
+      STATE.hearts = DIFFICULTIES[diff].hearts;
+      STATE.maxHearts = DIFFICULTIES[diff].hearts;
+      STATE.sparkles = DIFFICULTIES[diff].sparkles;
+      STATE.level = 1;
+      STATE.sceneIndex = 0;
+      STATE.inventory = [];
+      STATE.spells = [];
+      STATE.mochiReviveUsed = false;
+      renderIntro();
+    },
+    startLevel: function(lvl) {
+      STATE.level = lvl;
+      STATE.sceneIndex = 0;
+      STATE.mochiReviveUsed = false;
+      renderScene();
+    },
+    choose: function(i) {
+      const scene = SCENES[STATE.level][STATE.sceneIndex];
+      const choice = scene.choices[i];
+      renderResult(choice);
+    },
+    nextScene: function() {
+      STATE.sceneIndex++;
+      if (STATE.sceneIndex >= SCENES[STATE.level].length) {
+        renderLevelComplete();
+      } else {
+        renderScene();
+      }
+    },
+    nextLevel: function() { renderLevelComplete(); },
+    advanceLevel: function() {
+      STATE.level++;
+      STATE.sceneIndex = 0;
+      STATE.mochiReviveUsed = false;
+      renderScene();
+    },
+    victory: function() { renderVictory(); },
+    save: function() { renderSave(); },
+    continueGame: function() { renderScene(); },
+    restart: function() {
+      STATE.level = 1;
+      STATE.sceneIndex = 0;
+      STATE.inventory = [];
+      STATE.spells = [];
+      STATE.mochiReviveUsed = false;
+      renderStart();
+    }
+  };
+
+  renderStart();
+})();
+</script>
